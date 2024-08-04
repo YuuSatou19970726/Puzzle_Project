@@ -1,27 +1,30 @@
 using UnityEngine;
 
-public class SoundManager : MonoBehaviour
+namespace Connect.Core
 {
-    public static SoundManager Instance;
-    [SerializeField]
-    private AudioSource _effectSource;
-
-    void Awake()
+    public class SoundManager : MonoBehaviour
     {
-        if (Instance == null)
-        {
-            Instance = this;
-            DontDestroyOnLoad(gameObject);
-            return;
-        }
-        else
-        {
-            Destroy(gameObject);
-        }
-    }
+        public static SoundManager Instance;
+        [SerializeField]
+        private AudioSource _effectSource;
 
-    public void PlaySound(AudioClip clip)
-    {
-        _effectSource.PlayOneShot(clip);
+        void Awake()
+        {
+            if (Instance == null)
+            {
+                Instance = this;
+                DontDestroyOnLoad(gameObject);
+                return;
+            }
+            else
+            {
+                Destroy(gameObject);
+            }
+        }
+
+        public void PlaySound(AudioClip clip)
+        {
+            _effectSource.PlayOneShot(clip);
+        }
     }
 }
