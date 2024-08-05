@@ -18,15 +18,17 @@ namespace Connect.Core
 
         void Awake()
         {
-            if (Instance == null)
-            {
-                Instance = this;
-                DontDestroyOnLoad(gameObject);
-            }
-            else
-            {
-                Destroy(gameObject);
-            }
+            // if (Instance == null)
+            // {
+            //     Instance = this;
+            //     DontDestroyOnLoad(gameObject);
+            // }
+            // else
+            // {
+            //     Destroy(gameObject);
+            // }
+
+            Instance = this;
 
             _titlePanel.SetActive(true);
             _stagePanel.SetActive(false);

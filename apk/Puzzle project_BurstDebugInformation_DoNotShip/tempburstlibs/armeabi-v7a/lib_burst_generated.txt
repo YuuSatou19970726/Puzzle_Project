@@ -12,6 +12,7 @@ Library: D:\git_temp\Puzzle_Project\Temp\BurstOutput\tempburstlibs\armeabi-v7a\l
 --assembly-defines=Unity.Burst;
 --assembly-defines=Unity.2D.Animation.Runtime;
 --assembly-defines=Unity.2D.Tilemap.Extras;
+--assembly-defines=Connect.Common;
 --assembly-defines=Unity.InternalAPIEngineBridge.001;
 --assembly-defines=Unity.2D.Common.Runtime;
 --assembly-defines=Unity.Timeline;
@@ -20,6 +21,7 @@ Library: D:\git_temp\Puzzle_Project\Temp\BurstOutput\tempburstlibs\armeabi-v7a\l
 --assembly-defines=Unity.2D.PixelPerfect;
 --assembly-defines=Unity.Mathematics;
 --assembly-defines=Unity.TextMeshPro;
+--assembly-defines=Connect.Core;
 --assembly-defines=Unity.Collections.LowLevel.ILSupport;
 --assembly-defines=Unity.Burst.Unsafe;
 --assembly-defines=System.Runtime;
