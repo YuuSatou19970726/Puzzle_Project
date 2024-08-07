@@ -11,6 +11,8 @@ namespace Connect.Core
 
         void Awake()
         {
+            // PlayerPrefs.DeleteAll();
+
             if (Instance == null)
             {
                 Instance = this;

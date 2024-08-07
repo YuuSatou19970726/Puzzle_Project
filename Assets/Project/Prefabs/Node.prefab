@@ -600,3 +600,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4bd743c3787e1b9498a8e7c803d5f826, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  _point: {fileID: 2187967587592512237}
+  _topEdge: {fileID: 3938140733330859556}
+  _bottomEdge: {fileID: 3675825012161730482}
+  _leftEdge: {fileID: 1151332211505105799}
+  _rightEdge: {fileID: 5463728857788208479}
+  _highlight: {fileID: 824076278547229180}
+  colorId: 0
+  ConnectedNodes: []
