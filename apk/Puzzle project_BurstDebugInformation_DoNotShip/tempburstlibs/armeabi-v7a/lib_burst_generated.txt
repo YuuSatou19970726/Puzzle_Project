@@ -13,6 +13,7 @@ Library: D:\git_temp\Puzzle_Project\Temp\BurstOutput\tempburstlibs\armeabi-v7a\l
 --assembly-defines=Unity.2D.Animation.Runtime;
 --assembly-defines=Unity.2D.Tilemap.Extras;
 --assembly-defines=Connect.Common;
+--assembly-defines=Connect.Generator;
 --assembly-defines=Unity.InternalAPIEngineBridge.001;
 --assembly-defines=Unity.2D.Common.Runtime;
 --assembly-defines=Unity.Timeline;
