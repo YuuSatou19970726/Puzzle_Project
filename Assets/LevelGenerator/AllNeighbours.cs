@@ -32,9 +32,9 @@ namespace Connect.Generator
 
         private IEnumerator GeneratePaths()
         {
-            for (int i = 0; i <= Instance.levelSize; i++)
+            for (int i = 0; i < Instance.levelSize; i++)
             {
-                for (int j = 0; j <= i; j++)
+                for (int j = 0; j < Instance.levelSize; j++)
                 {
                     GridData tempGrid = new GridData(i, j, Instance.levelSize);
                     checkingGrid.Add(tempGrid);
@@ -109,21 +109,19 @@ namespace Connect.Generator
                         Vector2Int checkingDirection = item.CurrentPos + direction;
 
                         if (item.IsInsideGrid(checkingDirection)
-                        && item._grid[checkingDirection] == -1
-                        && item.IsNotNeighbour(checkingDirection))
+                            && item._grid[checkingDirection] == -1
+                            && item.IsNotNeighbour(checkingDirection))
                         {
-                            checkingGrid.Insert(posIndex + insertIndex, new GridData(checkingDirection.x, checkingDirection.y, item.ColorId + 1, item));
+                            checkingGrid.Insert(posIndex + insertIndex, new GridData(checkingDirection.x, checkingDirection.y, item.ColorId, item));
                             insertIndex++;
                         }
                     }
 
-
                     foreach (var emptyPos in item.EmptyPosition())
                     {
-                        if (item.FlowLenght() > 2)
+                        if (item.FlowLength() > 2)
                         {
-                            checkingGrid.Insert(posIndex + insertIndex,
-                            new GridData(emptyPos.x, emptyPos.y, item.ColorId + 1, item));
+                            checkingGrid.Insert(posIndex + insertIndex, new GridData(emptyPos.x, emptyPos.y, item.ColorId + 1, item));
                             insertIndex++;
                         }
                     }
@@ -245,7 +243,7 @@ public class GridData
         return result;
     }
 
-    public int FlowLenght()
+    public int FlowLength()
     {
         int result = 0;
         foreach (var item in _grid)
