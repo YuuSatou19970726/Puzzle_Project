@@ -169,7 +169,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   canGeneratorOnce: 1
-  stage: 0
+  stage: 1
   _boardPrefab: {fileID: 3306530206973139249, guid: 59bafcb3bb84efa4fb46fef8091dcbaa, type: 3}
   _bgCellPrefab: {fileID: 240159416919783105, guid: cc14e7b538baa89439adafa78eaffe6a, type: 3}
   _nodePrefab: {fileID: 2161709183398172740, guid: 5dde0637829ac4943b6479f2b5269be6, type: 3}
@@ -191,7 +191,7 @@ MonoBehaviour:
   _gridCountText: {fileID: 1858912147}
   _showOnlyResult: 0
   speedMultipler: 100
-  speed: 0.1
+  speed: 0.5
 --- !u!1 &662061024
 GameObject:
   m_ObjectHideFlags: 0
