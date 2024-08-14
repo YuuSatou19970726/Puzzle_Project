@@ -190,11 +190,11 @@ namespace Connect.Generator
                                 nodeArray[i, j].SetEdge(currentColor, neighbourPoints[p]);
                                 numOfConnectedNodes++;
                             }
+                        }
 
-                            if (numOfConnectedNodes <= 1)
-                            {
-                                nodeArray[i, j].SetEdge(currentColor, Point.zero);
-                            }
+                        if (numOfConnectedNodes <= 1)
+                        {
+                            nodeArray[i, j].SetEdge(currentColor, Point.zero);
                         }
                     }
                 }
