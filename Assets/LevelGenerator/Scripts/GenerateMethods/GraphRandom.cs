@@ -13,6 +13,7 @@ namespace Connect.Generator.GraphRandom
         private GridList checkingGrid;
         private LevelGenerator Instance;
         private bool isCreating;
+        private GridNode CurrentNode;
 
         private HashSet<GridList> GridSet;
 
@@ -36,29 +37,10 @@ namespace Connect.Generator.GraphRandom
 
         private IEnumerator GeneratePaths()
         {
-            GridData tempGrid = new GridData(0, 0, Instance.levelSize);
-            GridList tempList = new GridList(tempGrid);
-            checkingGrid = tempList;
-            AddToGridSet(tempList);
-
-
-            GridList addList = checkingGrid;
-
-            for (int i = 0; i < Instance.levelSize; i++)
-            {
-                for (int j = 0; j < Instance.levelSize; j++)
-                {
-                    tempGrid = new GridData(i, j, Instance.levelSize);
-                    tempList = new GridList(tempGrid);
-
-                    if (!GridSet.Contains(tempList))
-                    {
-                        addList.Next = tempList;
-                        addList = addList.Next;
-                        AddToGridSet(tempList);
-                    }
-                }
-            }
+            CurrentNode = new GridNode(Instance.levelSize);
+            CurrentNode.Next();
+            checkingGrid = new GridList(CurrentNode.Data);
+            AddToGridSet(checkingGrid);
 
             StartCoroutine(SolvePaths());
 
@@ -97,70 +79,43 @@ namespace Connect.Generator.GraphRandom
             }
         }
 
-        private List<Point> directionChecks = new List<Point>()
-        { Point.up,Point.down,Point.left,Point.right };
-
         private IEnumerator SolvePaths()
         {
-            bool canSolve = true;
             int iterPerFrame = (int)(speedMultipler);
             int currentIter = 0;
 
             GridList solveList = checkingGrid;
-            GridList resultGridList;
-            GridData item;
+            GridList tempList;
+            GridNode nextNode;
 
-            GridData tempGrid;
-            GridList tempList, connectList;
-
-            while (canSolve)
+            while (CurrentNode != null)
             {
-                resultGridList = solveList;
+                nextNode = CurrentNode.Next();
 
-                if (solveList == null)
+                if (nextNode != null)
                 {
-                    canSolve = false;
-                    yield break;
-                }
-
-                item = resultGridList.Data;
-
-                List<Point> neighbours = new List<Point>();
-                List<Point> emptyPositions = new List<Point>();
-
-                item.GetResultList(neighbours, emptyPositions);
-
-                foreach (var neighbour in neighbours)
-                {
-                    tempGrid = new GridData(neighbour.x, neighbour.y, item.ColorId, item);
-                    tempList = new GridList(tempGrid);
-
+                    tempList = new GridList(nextNode.Data);
                     if (!GridSet.Contains(tempList))
                     {
-                        connectList = resultGridList.Next;
-                        resultGridList.Next = tempList;
-                        tempList.Next = connectList;
-                        resultGridList = resultGridList.Next;
                         AddToGridSet(tempList);
+                        CurrentNode = nextNode;
                     }
-                }
-
-                foreach (var emptyPos in emptyPositions)
-                {
-                    tempGrid = new GridData(emptyPos.x, emptyPos.y, item.ColorId + 1, item);
-                    tempList = new GridList(tempGrid);
-
-                    if (!GridSet.Contains(tempList))
+                    else
                     {
-                        connectList = resultGridList.Next;
-                        resultGridList.Next = tempList;
-                        tempList.Next = connectList;
-                        resultGridList = resultGridList.Next;
-                        AddToGridSet(tempList);
+                        CurrentNode = CurrentNode.Prev;
+                        if (CurrentNode == null) yield break;
+                        tempList = new GridList(CurrentNode.Data);
                     }
                 }
+                else
+                {
+                    CurrentNode = CurrentNode.Prev;
+                    if (CurrentNode == null) yield break;
+                    tempList = new GridList(CurrentNode.Data);
+                }
 
-                item.IsSolved = true;
+                solveList.Next = tempList;
+                solveList = solveList.Next;
 
                 currentIter++;
 
@@ -169,8 +124,6 @@ namespace Connect.Generator.GraphRandom
                     currentIter = 0;
                     yield return null;
                 }
-
-                solveList = solveList.Next;
             }
         }
 
@@ -199,6 +152,93 @@ namespace Connect.Generator.GraphRandom
         {
             Next = null;
             Data = data;
+        }
+    }
+
+    public class GridNode
+    {
+        public GridNode Prev;
+        public GridData Data;
+        private int neighborIndex, emptyIndex;
+        private List<Point> neighbors, emptyPositions;
+
+        public GridNode(int LevelSize)
+        {
+            Prev = null;
+            Data = new GridData(LevelSize);
+            neighbors = new List<Point>();
+            emptyPositions = new List<Point>();
+            neighborIndex = 0;
+            emptyIndex = 0;
+            for (int i = 0; i < LevelSize; i++)
+            {
+                for (int j = 0; j < LevelSize; j++)
+                {
+                    emptyPositions.Add(new Point(i, j));
+                }
+            }
+        }
+
+        public GridNode(GridData data, GridNode prev = null)
+        {
+            Data = data;
+            Prev = prev;
+            neighborIndex = 0;
+            emptyIndex = 0;
+            neighbors = new List<Point>();
+            emptyPositions = new List<Point>();
+            Data.GetResultList(neighbors, emptyPositions);
+            Shuffle(neighbors);
+            Shuffle(emptyPositions);
+        }
+
+        public GridNode Next()
+        {
+            GridData tempGrid = null;
+
+            if (neighborIndex < neighbors.Count && emptyIndex < emptyPositions.Count)
+            {
+                if (UnityEngine.Random.Range(0, GridData.LevelSize) != 0)
+                {
+                    tempGrid = new GridData(neighbors[neighborIndex].x, neighbors[neighborIndex].y, Data.ColorId, Data);
+                    neighborIndex++;
+                    return new GridNode(tempGrid, this);
+                }
+                else
+                {
+                    tempGrid = new GridData(emptyPositions[emptyIndex].x, emptyPositions[emptyIndex].y, Data.ColorId + 1, Data);
+                    emptyIndex++;
+                    return new GridNode(tempGrid, this);
+                }
+            }
+            else if (neighborIndex < neighbors.Count)
+            {
+                tempGrid = new GridData(neighbors[neighborIndex].x, neighbors[neighborIndex].y, Data.ColorId, Data);
+                neighborIndex++;
+                return new GridNode(tempGrid, this);
+            }
+            else if (emptyIndex < emptyPositions.Count)
+            {
+                tempGrid = new GridData(emptyPositions[emptyIndex].x, emptyPositions[emptyIndex].y, Data.ColorId + 1, Data);
+                emptyIndex++;
+                return new GridNode(tempGrid, this);
+            }
+
+            return null;
+        }
+
+        public static void Shuffle(List<Point> list)
+        {
+            System.Random rng = new System.Random();
+            int n = list.Count;
+            while (n > 1)
+            {
+                n--;
+                int k = rng.Next(n + 1);
+                var value = list[k];
+                list[k] = list[n];
+                list[n] = value;
+            }
         }
     }
 
@@ -355,6 +395,23 @@ namespace Connect.Generator.GraphRandom
         public Point CurrentPos;
         public int ColorId;
         public static int LevelSize;
+
+        public GridData(int levelSize)
+        {
+            _grid = new int[levelSize, levelSize];
+
+            for (int i = 0; i < LevelSize; i++)
+            {
+                for (int j = 0; j < LevelSize; j++)
+                {
+                    _grid[i, j] = -1;
+                }
+            }
+
+            IsSolved = false;
+            ColorId = -1;
+            LevelSize = levelSize;
+        }
 
         public GridData(int i, int j, int levelSize)
         {
