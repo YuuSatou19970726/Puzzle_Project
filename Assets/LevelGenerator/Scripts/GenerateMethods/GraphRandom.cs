@@ -38,7 +38,7 @@ namespace Connect.Generator.GraphRandom
         private IEnumerator GeneratePaths()
         {
             CurrentNode = new GridNode(Instance.levelSize);
-            CurrentNode.Next();
+            CurrentNode = CurrentNode.Next();
             checkingGrid = new GridList(CurrentNode.Data);
             AddToGridSet(checkingGrid);
 
@@ -161,7 +161,6 @@ namespace Connect.Generator.GraphRandom
         public GridData Data;
         private int neighborIndex, emptyIndex;
         private List<Point> neighbors, emptyPositions;
-
         public GridNode(int LevelSize)
         {
             Prev = null;
@@ -187,14 +186,14 @@ namespace Connect.Generator.GraphRandom
             emptyIndex = 0;
             neighbors = new List<Point>();
             emptyPositions = new List<Point>();
-            Data.GetResultList(neighbors, emptyPositions);
+            Data.GetResultsList(neighbors, emptyPositions);
             Shuffle(neighbors);
             Shuffle(emptyPositions);
         }
 
         public GridNode Next()
         {
-            GridData tempGrid = null;
+            GridData tempGrid;
 
             if (neighborIndex < neighbors.Count && emptyIndex < emptyPositions.Count)
             {
@@ -385,6 +384,7 @@ namespace Connect.Generator.GraphRandom
 
     }
 
+
     public class GridData
     {
         private static Point[] directionChecks = new Point[]
@@ -400,9 +400,9 @@ namespace Connect.Generator.GraphRandom
         {
             _grid = new int[levelSize, levelSize];
 
-            for (int i = 0; i < LevelSize; i++)
+            for (int i = 0; i < levelSize; i++)
             {
-                for (int j = 0; j < LevelSize; j++)
+                for (int j = 0; j < levelSize; j++)
                 {
                     _grid[i, j] = -1;
                 }
@@ -502,8 +502,6 @@ namespace Connect.Generator.GraphRandom
             return true;
         }
 
-
-
         public int FlowLength()
         {
             int result = 0;
@@ -535,7 +533,7 @@ namespace Connect.Generator.GraphRandom
             return result;
         }
 
-        public void GetResultList(List<Point> neighbours, List<Point> emptyPositions)
+        public void GetResultsList(List<Point> neighbours, List<Point> emptyPositions)
         {
             int[,] emptyGrid = new int[LevelSize, LevelSize];
             for (int i = 0; i < LevelSize; i++)
@@ -571,7 +569,9 @@ namespace Connect.Generator.GraphRandom
             for (int i = 0; i < directionChecks.Length; i++)
             {
                 Point tempPoint = CurrentPos + directionChecks[i];
-                if (IsInsideGrid(tempPoint) && IsNotNeighbour(tempPoint) && emptyGrid[tempPoint.x, tempPoint.y] != -1)
+                if (IsInsideGrid(tempPoint) &&
+                    IsNotNeighbour(tempPoint) &&
+                    emptyGrid[tempPoint.x, tempPoint.y] != -1)
                 {
                     if (emptyGrid[tempPoint.x, tempPoint.y] == 0)
                     {
@@ -609,7 +609,9 @@ namespace Connect.Generator.GraphRandom
             }
 
             if (zeroEmpty.Count > 0 || zeroNeighbours.Count > 1)
+            {
                 return;
+            }
 
             if (zeroNeighbours.Count == 1)
             {
@@ -624,11 +626,14 @@ namespace Connect.Generator.GraphRandom
 
             if (FlowLength() < 3) return;
 
+            HashSet<Point> minSet = FindMinConnectedSet(new List<Point>(allEmpty));
+
             if (oneEmpty.Count > 0)
             {
                 foreach (var item in oneEmpty)
                 {
-                    emptyPositions.Add(item);
+                    if (minSet.Contains(item))
+                        emptyPositions.Add(item);
                 }
 
                 return;
@@ -636,8 +641,10 @@ namespace Connect.Generator.GraphRandom
 
             foreach (var item in allEmpty)
             {
-                emptyPositions.Add(item);
+                if (minSet.Contains(item))
+                    emptyPositions.Add(item);
             }
+
         }
 
         public void Rotate(int rot)
@@ -712,6 +719,70 @@ namespace Connect.Generator.GraphRandom
         {
             pos.x = LevelSize - 1 - pos.x;
             return pos;
+        }
+
+        public static HashSet<Point> FindMinConnectedSet(List<Point> points)
+        {
+            HashSet<Point> visited = new HashSet<Point>();
+            HashSet<Point> allPoints = new HashSet<Point>(points);
+            List<HashSet<Point>> connectedSet = new List<HashSet<Point>>();
+
+            foreach (var point in points)
+            {
+                if (!visited.Contains(point))
+                {
+                    HashSet<Point> connected = new HashSet<Point>();
+                    Queue<Point> queue = new Queue<Point>();
+
+                    queue.Enqueue(point);
+
+                    while (queue.Count > 0)
+                    {
+                        Point current = queue.Dequeue();
+
+                        if (!visited.Contains(current))
+                        {
+                            connected.Add(current);
+                            visited.Add(current);
+
+                            foreach (var neighbor in GetNeighbors(current))
+                            {
+                                if (!visited.Contains(neighbor) && allPoints.Contains(neighbor))
+                                {
+                                    queue.Enqueue(neighbor);
+                                }
+                            }
+                        }
+                    }
+
+                    connectedSet.Add(connected);
+                }
+            }
+
+            HashSet<Point> minSet = null;
+
+            foreach (var item in connectedSet)
+            {
+                if (minSet == null || item.Count < minSet.Count)
+                {
+                    minSet = item;
+                }
+            }
+
+            return minSet;
+        }
+
+        private static List<Point> GetNeighbors(Point point)
+        {
+            List<Point> result = new List<Point>
+            {
+                new Point(point.x, point.y + 1),
+                new Point(point.x, point.y - 1),
+                new Point(point.x + 1, point.y),
+                new Point(point.x - 1, point.y)
+            };
+
+            return result;
         }
     }
 }
