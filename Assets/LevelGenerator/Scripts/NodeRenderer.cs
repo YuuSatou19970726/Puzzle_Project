@@ -5,19 +5,14 @@ namespace Connect.Generator
 {
     public class NodeRenderer : MonoBehaviour
     {
-        [SerializeField]
-        private List<Color> NodeColors;
+        [SerializeField] private List<Color> NodeColors;
 
-        [SerializeField]
-        private GameObject _point;
-        [SerializeField]
-        private GameObject _topEdge;
-        [SerializeField]
-        private GameObject _bottomEdge;
-        [SerializeField]
-        private GameObject _leftEdge;
-        [SerializeField]
-        private GameObject _rightEdge;
+        [SerializeField] private GameObject _point;
+        [SerializeField] private GameObject _topEdge;
+        [SerializeField] private GameObject _bottomEdge;
+        [SerializeField] private GameObject _leftEdge;
+        [SerializeField] private GameObject _rightEdge;
+
 
         public void Init()
         {
@@ -36,21 +31,24 @@ namespace Connect.Generator
             {
                 connectedNode = _topEdge;
             }
+
             else if (direction == Point.down)
             {
                 connectedNode = _bottomEdge;
             }
+
             else if (direction == Point.left)
             {
                 connectedNode = _leftEdge;
             }
+
             else if (direction == Point.right)
             {
                 connectedNode = _rightEdge;
             }
 
             connectedNode.SetActive(true);
-            connectedNode.GetComponent<SpriteRenderer>().color = NodeColors[colorId];
+            connectedNode.GetComponent<SpriteRenderer>().color = NodeColors[colorId % NodeColors.Count];
         }
-    }
+    } 
 }

@@ -141,6 +141,14 @@ namespace Connect.Generator.BubbleRemove
 
             checkingGridCount++;
         }
+
+        public static bool IsSolvable(HashSet<Point> points)
+        {
+            if (points.Count < 3) return false;
+            if (points.Count == 3) return true;
+            if (points.Count > 9) return true;
+            return true;
+        }
     }
 
     public class GridList
@@ -608,9 +616,37 @@ namespace Connect.Generator.BubbleRemove
                 }
             }
 
+            List<HashSet<Point>> connectedSet = new List<HashSet<Point>>();
+            HashSet<Point> minSet = FindMinConnectedSet(new List<Point>(allEmpty), connectedSet);
+            List<HashSet<Point>> tempSet = new List<HashSet<Point>>();
+
+            foreach (var item in connectedSet)
+            {
+                bool canAdd = true;
+
+                foreach (var neighbour in allNeighbours)
+                {
+                    if (item.Contains(neighbour))
+                    {
+                        canAdd = false;
+                    }
+                    if (canAdd)
+                        tempSet.Add(item);
+                }
+            }
+            connectedSet = tempSet;
+
             if (zeroEmpty.Count > 0 || zeroNeighbours.Count > 1)
             {
                 return;
+            }
+
+            foreach (var item in connectedSet)
+            {
+                if (!BubbleRemove.IsSolvable(item))
+                {
+                    return;
+                }
             }
 
             if (zeroNeighbours.Count == 1)
@@ -625,8 +661,6 @@ namespace Connect.Generator.BubbleRemove
             }
 
             if (FlowLength() < 3) return;
-
-            HashSet<Point> minSet = FindMinConnectedSet(new List<Point>(allEmpty));
 
             if (oneEmpty.Count > 0)
             {
@@ -721,11 +755,10 @@ namespace Connect.Generator.BubbleRemove
             return pos;
         }
 
-        public static HashSet<Point> FindMinConnectedSet(List<Point> points)
+        public static HashSet<Point> FindMinConnectedSet(List<Point> points, List<HashSet<Point>> connectedSet)
         {
             HashSet<Point> visited = new HashSet<Point>();
             HashSet<Point> allPoints = new HashSet<Point>(points);
-            List<HashSet<Point>> connectedSet = new List<HashSet<Point>>();
 
             foreach (var point in points)
             {
