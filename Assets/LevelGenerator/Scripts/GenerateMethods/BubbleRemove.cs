@@ -15,8 +15,6 @@ namespace Connect.Generator.BubbleRemove
         private bool isCreating;
         private GridNode CurrentNode;
 
-        private HashSet<GridList> GridSet;
-
         [SerializeField] private float speedMultipler;
         [SerializeField] private float speed;
         private long checkingGridCount;
@@ -25,8 +23,6 @@ namespace Connect.Generator.BubbleRemove
         {
             Instance = GetComponent<LevelGenerator>();
             isCreating = true;
-            GridSetComparer setComparer = new GridSetComparer();
-            GridSet = new HashSet<GridList>(setComparer);
             checkingGridCount = 0;
         }
 
@@ -40,9 +36,10 @@ namespace Connect.Generator.BubbleRemove
             CurrentNode = new GridNode(Instance.levelSize);
             CurrentNode = CurrentNode.Next();
             checkingGrid = new GridList(CurrentNode.Data);
-            AddToGridSet(checkingGrid);
 
             StartCoroutine(SolvePaths());
+
+            yield return null;
 
             int count = 0;
 
@@ -90,22 +87,16 @@ namespace Connect.Generator.BubbleRemove
 
             while (CurrentNode != null)
             {
+                if (CurrentNode.Data.IsGridComplete())
+                {
+                    yield break;
+                }
                 nextNode = CurrentNode.Next();
 
                 if (nextNode != null)
                 {
+                    CurrentNode = nextNode;
                     tempList = new GridList(nextNode.Data);
-                    if (!GridSet.Contains(tempList))
-                    {
-                        AddToGridSet(tempList);
-                        CurrentNode = nextNode;
-                    }
-                    else
-                    {
-                        CurrentNode = CurrentNode.Prev;
-                        if (CurrentNode == null) yield break;
-                        tempList = new GridList(CurrentNode.Data);
-                    }
                 }
                 else
                 {
@@ -117,6 +108,7 @@ namespace Connect.Generator.BubbleRemove
                 solveList.Next = tempList;
                 solveList = solveList.Next;
 
+                checkingGridCount++;
                 currentIter++;
 
                 if (currentIter > iterPerFrame * Time.deltaTime)
@@ -127,27 +119,33 @@ namespace Connect.Generator.BubbleRemove
             }
         }
 
-        private void AddToGridSet(GridList addList)
-        {
-            GridList tempList;
-            foreach (var item in addList.Data.GetSimilar())
-            {
-                tempList = new GridList(item);
-                if (!GridSet.Contains(tempList))
-                {
-                    GridSet.Add(tempList);
-                }
-            }
-
-            checkingGridCount++;
-        }
-
         public static bool IsSolvable(HashSet<Point> points)
         {
             if (points.Count < 3) return false;
             if (points.Count == 3) return true;
             if (points.Count > 9) return true;
-            return true;
+
+            GridNode CurrentCheckNode = new GridNode(GridData.LevelSize, points);
+            GridNode NextNode;
+
+            while (CurrentCheckNode != null)
+            {
+                if (CurrentCheckNode.Data.IsGridComplete())
+                {
+                    return true;
+                }
+                NextNode = CurrentCheckNode.Next();
+                if (NextNode != null)
+                {
+                    CurrentCheckNode = NextNode;
+                }
+                else
+                {
+                    CurrentCheckNode = CurrentCheckNode.Prev;
+                }
+            }
+
+            return false;
         }
     }
 
@@ -184,6 +182,7 @@ namespace Connect.Generator.BubbleRemove
                     emptyPositions.Add(new Point(i, j));
                 }
             }
+            Shuffle(emptyPositions);
         }
 
         public GridNode(GridData data, GridNode prev = null)
@@ -196,6 +195,23 @@ namespace Connect.Generator.BubbleRemove
             emptyPositions = new List<Point>();
             Data.GetResultsList(neighbors, emptyPositions);
             Shuffle(neighbors);
+            Shuffle(emptyPositions);
+        }
+
+        public GridNode(int LevelSize, HashSet<Point> points)
+        {
+            Prev = null;
+            Data = new GridData(LevelSize, points);
+            neighborIndex = 0;
+            emptyIndex = 0;
+            neighbors = new List<Point>();
+            emptyPositions = new List<Point>();
+
+            foreach (var item in points)
+            {
+                emptyPositions.Add(item);
+            }
+
             Shuffle(emptyPositions);
         }
 
@@ -248,150 +264,6 @@ namespace Connect.Generator.BubbleRemove
             }
         }
     }
-
-    public class GridSetComparer : IEqualityComparer<GridList>
-    {
-        private static Point[] directionChecks = new Point[]
-        { Point.up,Point.left,Point.down,Point.right };
-
-        public bool Equals(GridList x, GridList y)
-        {
-            int[,] firstGrid, secondGrid;
-            firstGrid = x.Data._grid;
-            secondGrid = y.Data._grid;
-
-            int[] colorSwap = new int[x.Data.ColorId + 1];
-
-            for (int i = 0; i < colorSwap.Length; i++)
-            {
-                colorSwap[i] = -1;
-            }
-
-            Point pos;
-            bool isEmpty = false;
-
-            for (int i = 0; i < GridData.LevelSize; i++)
-            {
-                for (int j = 0; j < GridData.LevelSize; j++)
-                {
-                    pos.x = i;
-                    pos.y = j;
-
-                    if (!isEmpty && firstGrid[pos.x, pos.y] == -1 || secondGrid[pos.x, pos.y] == -1)
-                    {
-                        isEmpty = true;
-                    }
-
-                    if ((firstGrid[pos.x, pos.y] == -1 && secondGrid[pos.x, pos.y] != -1) ||
-                        (firstGrid[pos.x, pos.y] != -1 && secondGrid[pos.x, pos.y] == -1))
-                    {
-                        return false;
-                    }
-
-                    bool canCheck = firstGrid[pos.x, pos.y] != -1;
-
-                    if (canCheck && colorSwap[firstGrid[pos.x, pos.y]] == -1)
-                    {
-                        colorSwap[firstGrid[pos.x, pos.y]] = secondGrid[pos.x, pos.y];
-                    }
-                    else if (canCheck)
-                    {
-                        if (colorSwap[firstGrid[pos.x, pos.y]] != secondGrid[pos.x, pos.y])
-                        {
-                            return false;
-                        }
-                    }
-                }
-            }
-
-            if (isEmpty && x.Data.CurrentPos != y.Data.CurrentPos)
-            {
-                return false;
-            }
-
-            return true;
-        }
-
-        public int GetHashCode(GridList obj)
-        {
-            bool[,,] graph = new bool[GridData.LevelSize, GridData.LevelSize, 4];
-
-            Point startPos, checkPos;
-
-            startPos = Point.zero;
-
-            for (int i = 0; i < GridData.LevelSize; i++)
-            {
-                for (int j = 0; j < GridData.LevelSize; j++)
-                {
-                    startPos.x = i;
-                    startPos.y = j;
-
-                    if (obj.Data._grid[startPos.x, startPos.y] != -1)
-                    {
-                        for (int d = 0; d < directionChecks.Length; d++)
-                        {
-                            checkPos = directionChecks[d] + startPos;
-                            graph[i, j, d] = obj.Data.IsInsideGrid(checkPos) &&
-                               obj.Data._grid[checkPos.x, checkPos.y] ==
-                               obj.Data._grid[startPos.x, startPos.y];
-                        }
-                    }
-                    else
-                    {
-                        for (int d = 0; d < 4; d++)
-                        {
-                            graph[i, j, d] = false;
-                        }
-                    }
-                }
-            }
-            return GetHashCodeBool3D(graph);
-        }
-
-        public int GetHashCodeBool3D(bool[,,] arr)
-        {
-            int length = arr.GetLength(0) * arr.GetLength(1) * arr.GetLength(2);
-            byte[] byteArray = new byte[(length + 7) / 8];
-
-            int index = 0;
-            int bitIndex = 0;
-            byte currentByte = 0;
-
-            for (int i = 0; i < arr.GetLength(0); i++)
-            {
-                for (int j = 0; j < arr.GetLength(1); j++)
-                {
-                    for (int k = 0; k < arr.GetLength(2); k++)
-                    {
-                        if (arr[i, j, k])
-                        {
-                            currentByte |= (byte)(1 << bitIndex);
-                        }
-
-                        bitIndex++;
-
-                        if (bitIndex == 8)
-                        {
-                            byteArray[index] = currentByte;
-                            currentByte = 0;
-                            bitIndex = 0;
-                            index++;
-                        }
-                    }
-                }
-            }
-
-            if (bitIndex > 0)
-            {
-                byteArray[index] = currentByte;
-            }
-
-            return BitConverter.ToString(byteArray).GetHashCode();
-        }
-
-    }
-
 
     public class GridData
     {
@@ -457,6 +329,28 @@ namespace Connect.Generator.BubbleRemove
             IsSolved = false;
         }
 
+        public GridData(int levelSize, HashSet<Point> points)
+        {
+            _grid = new int[levelSize, levelSize];
+
+            for (int i = 0; i < levelSize; i++)
+            {
+                for (int j = 0; j < levelSize; j++)
+                {
+                    _grid[i, j] = -2;
+                }
+            }
+
+            foreach (var point in points)
+            {
+                _grid[point.x, point.y] = -1;
+            }
+
+            IsSolved = false;
+            ColorId = -1;
+            LevelSize = levelSize;
+        }
+
         public bool IsInsideGrid(Point pos)
         {
             return pos.IsPointValid(LevelSize);
@@ -517,25 +411,6 @@ namespace Connect.Generator.BubbleRemove
             {
                 if (item == ColorId)
                     result++;
-            }
-
-            return result;
-        }
-
-        public List<GridData> GetSimilar()
-        {
-            List<GridData> result = new List<GridData>();
-
-            GridData addData;
-
-            for (int i = 0; i < 4; i++)
-            {
-                addData = new GridData(CurrentPos.x, CurrentPos.y, ColorId, this);
-                addData.Rotate(i);
-                result.Add(addData);
-                addData = new GridData(addData.CurrentPos.x, addData.CurrentPos.y, addData.ColorId, addData);
-                addData.Flip();
-                result.Add(addData);
             }
 
             return result;
@@ -679,80 +554,6 @@ namespace Connect.Generator.BubbleRemove
                     emptyPositions.Add(item);
             }
 
-        }
-
-        public void Rotate(int rot)
-        {
-            for (int i = 0; i < rot; i++)
-            {
-                Rotate();
-            }
-        }
-
-        private void Rotate()
-        {
-            for (int i = 0; i < LevelSize; i++)
-            {
-                int start = 0;
-                int end = LevelSize - 1;
-                while (start < end)
-                {
-                    int temp = _grid[i, start];
-                    _grid[i, start] = _grid[i, end];
-                    _grid[i, end] = temp;
-                    start++;
-                    end--;
-                }
-            }
-
-            for (int i = 0; i < LevelSize; i++)
-            {
-                for (int j = i; j < LevelSize; j++)
-                {
-                    int temp = _grid[i, j];
-                    _grid[i, j] = _grid[j, i];
-                    _grid[j, i] = temp;
-                }
-            }
-
-            CurrentPos = Rotate(CurrentPos);
-
-        }
-
-        private Point Rotate(Point pos)
-        {
-            Point result = pos;
-            result.x = LevelSize - 1 - pos.y;
-            result.y = pos.x;
-            return result;
-        }
-
-
-        public void Flip()
-        {
-
-            int tempColor;
-            Point firstPos, secondPos;
-
-            for (int i = 0; i < LevelSize / 2; i++)
-            {
-                for (int j = 0; j < LevelSize; j++)
-                {
-                    firstPos = new Point(i, j);
-                    tempColor = _grid[firstPos.x, firstPos.y];
-                    secondPos = Flip(firstPos);
-                    _grid[firstPos.x, firstPos.y] = _grid[secondPos.x, secondPos.y];
-                    _grid[secondPos.x, secondPos.y] = tempColor;
-                }
-            }
-
-            CurrentPos = Flip(CurrentPos);
-        }
-
-        private Point Flip(Point pos)
-        {
-            pos.x = LevelSize - 1 - pos.x;
-            return pos;
         }
 
         public static HashSet<Point> FindMinConnectedSet(List<Point> points, List<HashSet<Point>> connectedSet)
