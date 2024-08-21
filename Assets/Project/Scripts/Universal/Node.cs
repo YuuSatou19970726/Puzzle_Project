@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -6,22 +5,18 @@ namespace Connect.Core
 {
     public class Node : MonoBehaviour
     {
-        [SerializeField]
-        private GameObject _point;
-        [SerializeField]
-        private GameObject _topEdge;
-        [SerializeField]
-        private GameObject _bottomEdge;
-        [SerializeField]
-        private GameObject _leftEdge;
-        [SerializeField]
-        private GameObject _rightEdge;
-        [SerializeField]
-        private GameObject _highlight;
+
+        [SerializeField] private GameObject _point;
+        [SerializeField] private GameObject _topEdge;
+        [SerializeField] private GameObject _bottomEdge;
+        [SerializeField] private GameObject _leftEdge;
+        [SerializeField] private GameObject _rightEdge;
+        [SerializeField] private GameObject _highLight;
 
         private Dictionary<Node, GameObject> ConnectedEdges;
 
-        public Vector2Int Pos2D { get; set; }
+        [HideInInspector] public int colorId;
+
         public bool IsWin
         {
             get
@@ -30,19 +25,28 @@ namespace Connect.Core
                 {
                     return ConnectedNodes.Count == 1;
                 }
+
                 return ConnectedNodes.Count == 2;
             }
         }
 
         public bool IsClickable
         {
-            get { if (_point.activeSelf) return true; return ConnectedNodes.Count > 0; }
+            get
+            {
+                if (_point.activeSelf)
+                {
+                    return true;
+                }
+
+                return ConnectedNodes.Count > 0;
+            }
         }
 
         public bool IsEndNode => _point.activeSelf;
 
-        [HideInInspector]
-        public int colorId;
+        public Vector2Int Pos2D
+        { get; set; }
 
         public void Init()
         {
@@ -51,44 +55,57 @@ namespace Connect.Core
             _bottomEdge.SetActive(false);
             _leftEdge.SetActive(false);
             _rightEdge.SetActive(false);
-            _highlight.SetActive(false);
-
+            _highLight.SetActive(false);
             ConnectedEdges = new Dictionary<Node, GameObject>();
             ConnectedNodes = new List<Node>();
         }
 
         public void SetColorForPoint(int colorIdForSpawnedNode)
         {
-            this.colorId = colorIdForSpawnedNode;
+            colorId = colorIdForSpawnedNode;
             _point.SetActive(true);
-            _point.GetComponent<SpriteRenderer>().color = GameplayManager.Instance.NodeColors[this.colorId];
+            _point.GetComponent<SpriteRenderer>().color =
+                GameplayManager.Instance.NodeColors[colorId % GameplayManager.Instance.NodeColors.Count];
         }
 
         public void SetEdge(Vector2Int offset, Node node)
         {
             if (offset == Vector2Int.up)
-            { ConnectedEdges[node] = _topEdge; return; }
+            {
+                ConnectedEdges[node] = _topEdge;
+                return;
+            }
 
             if (offset == Vector2Int.down)
-            { ConnectedEdges[node] = _bottomEdge; return; }
-
-            if (offset == Vector2Int.left)
-            { ConnectedEdges[node] = _leftEdge; return; }
+            {
+                ConnectedEdges[node] = _bottomEdge;
+                return;
+            }
 
             if (offset == Vector2Int.right)
-            { ConnectedEdges[node] = _rightEdge; return; }
+            {
+                ConnectedEdges[node] = _rightEdge;
+                return;
+            }
+
+            if (offset == Vector2Int.left)
+            {
+                ConnectedEdges[node] = _leftEdge;
+                return;
+            }
         }
 
-        [HideInInspector]
-        public List<Node> ConnectedNodes;
+        [HideInInspector] public List<Node> ConnectedNodes;
 
         public void UpdateInput(Node connectedNode)
         {
             //Invalid Input
             if (!ConnectedEdges.ContainsKey(connectedNode))
+            {
                 return;
+            }
 
-            //Connected Node already exits
+            //Connected Node already exist
             //Delete the Edge and the parts
             if (ConnectedNodes.Contains(connectedNode))
             {
@@ -138,8 +155,8 @@ namespace Connect.Core
                 tempNode.DeleteNode();
             }
 
-            // End Node is Different Color and has 1 Edge
-            if (connectedNode.ConnectedNodes.Count == 1 & connectedNode.colorId != colorId)
+            //Start Node is Different Color and connected Node Has 1 Edge
+            if (connectedNode.ConnectedNodes.Count == 1 && connectedNode.colorId != colorId)
             {
                 Node tempNode = connectedNode.ConnectedNodes[0];
                 connectedNode.ConnectedNodes.Remove(tempNode);
@@ -148,7 +165,7 @@ namespace Connect.Core
                 tempNode.DeleteNode();
             }
 
-            //Starting is End Node and has 1 Edge already
+            //Starting is Edge Node and has 1 Edge already
             if (ConnectedNodes.Count == 1 && IsEndNode)
             {
                 Node tempNode = ConnectedNodes[0];
@@ -170,9 +187,11 @@ namespace Connect.Core
 
             AddEdge(connectedNode);
 
-            //Don't allow Boxes
+            //Dont allow Boxes
             if (colorId != connectedNode.colorId)
+            {
                 return;
+            }
 
             List<Node> checkingNodes = new List<Node>() { this };
             List<Node> resultNodes = new List<Node>() { this };
@@ -190,7 +209,6 @@ namespace Connect.Core
 
                 checkingNodes.Remove(checkingNodes[0]);
             }
-
 
             foreach (var item in resultNodes)
             {
@@ -213,6 +231,7 @@ namespace Connect.Core
                     return;
                 }
             }
+
         }
 
         private void AddEdge(Node connectedNode)
@@ -222,7 +241,8 @@ namespace Connect.Core
             ConnectedNodes.Add(connectedNode);
             GameObject connectedEdge = ConnectedEdges[connectedNode];
             connectedEdge.SetActive(true);
-            connectedEdge.GetComponent<SpriteRenderer>().color = GameplayManager.Instance.NodeColors[colorId];
+            connectedEdge.GetComponent<SpriteRenderer>().color =
+                GameplayManager.Instance.NodeColors[colorId % GameplayManager.Instance.NodeColors.Count];
         }
 
         private void RemoveEdge(Node node)
@@ -236,8 +256,11 @@ namespace Connect.Core
         private void DeleteNode()
         {
             Node startNode = this;
+
             if (startNode.IsConnectedToEndNode())
+            {
                 return;
+            }
 
             while (startNode != null)
             {
@@ -261,7 +284,9 @@ namespace Connect.Core
             }
 
             if (IsEndNode)
+            {
                 return true;
+            }
 
             foreach (var item in ConnectedNodes)
             {
@@ -279,7 +304,7 @@ namespace Connect.Core
         {
             if (ConnectedNodes.Count == 0)
             {
-                _highlight.SetActive(false);
+                _highLight.SetActive(false);
                 return;
             }
 
@@ -312,23 +337,25 @@ namespace Connect.Core
 
             if (checkingNodes.Count == 2)
             {
-                _highlight.SetActive(true);
-                _highlight.GetComponent<SpriteRenderer>().color = GameplayManager.Instance.GetHighLightColor(colorId);
+                _highLight.SetActive(true);
+                _highLight.GetComponent<SpriteRenderer>().color =
+                    GameplayManager.Instance.GetHighLightColor(colorId);
             }
             else
             {
-                _highlight.SetActive(false);
+                _highLight.SetActive(false);
             }
+
         }
 
         private List<Vector2Int> directionCheck = new List<Vector2Int>()
         {
-            Vector2Int.up, Vector2Int.left, Vector2Int.down, Vector2Int.right
+            Vector2Int.up,Vector2Int.left,Vector2Int.down,Vector2Int.right
         };
 
         public bool IsDegreeThree(List<Node> resultNodes)
         {
-            bool isDegreeThree = false;
+            bool isdegreethree = false;
 
             int numOfNeighbours = 0;
 
@@ -352,15 +379,19 @@ namespace Connect.Core
                 }
 
                 if (numOfNeighbours == 3)
+                {
                     break;
+                }
 
                 numOfNeighbours = 0;
             }
 
             if (numOfNeighbours >= 3)
-                isDegreeThree = true;
+            {
+                isdegreethree = true;
+            }
 
-            return isDegreeThree;
+            return isdegreethree;
         }
     }
 }

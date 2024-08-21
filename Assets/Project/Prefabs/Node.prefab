@@ -605,6 +605,6 @@ MonoBehaviour:
   _bottomEdge: {fileID: 3675825012161730482}
   _leftEdge: {fileID: 1151332211505105799}
   _rightEdge: {fileID: 5463728857788208479}
-  _highlight: {fileID: 824076278547229180}
+  _highLight: {fileID: 824076278547229180}
   colorId: 0
   ConnectedNodes: []

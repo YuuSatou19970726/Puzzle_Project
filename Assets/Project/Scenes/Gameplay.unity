@@ -500,7 +500,7 @@ MonoBehaviour:
       m_Calls:
       - m_Target: {fileID: 1878707648}
         m_TargetAssemblyTypeName: Connect.Core.GameplayManager, Connect.Core
-        m_MethodName: ClickNextLevel
+        m_MethodName: ClickedNextLevel
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
