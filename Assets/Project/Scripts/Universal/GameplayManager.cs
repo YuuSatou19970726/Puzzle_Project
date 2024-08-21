@@ -1,6 +1,5 @@
-using System.Collections;
-using System.Collections.Generic;
 using Connect.Common;
+using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
 
@@ -13,17 +12,13 @@ namespace Connect.Core
         #region START_VARIABLES
         public static GameplayManager Instance;
 
-        [HideInInspector]
-        public bool hasGameFinished;
+        [HideInInspector] public bool hasGameFinished;
 
-        [SerializeField]
-        private TMP_Text _titleText;
-        [SerializeField]
-        private GameObject _winText;
-        [SerializeField]
-        private SpriteRenderer _clickHighlight;
+        [SerializeField] private TMP_Text _titleText;
+        [SerializeField] private GameObject _winText;
+        [SerializeField] private SpriteRenderer _clickHighlight;
 
-        void Awake()
+        private void Awake()
         {
             Instance = this;
 
@@ -37,19 +32,23 @@ namespace Connect.Core
             SpawnBoard();
 
             SpawnNodes();
+
         }
 
         #endregion
 
         #region BOARD_SPAWN
-        [SerializeField]
-        private SpriteRenderer _boardPrefab, _bgCellPrefab;
+
+        [SerializeField] private SpriteRenderer _boardPrefab, _bgCellPrefab;
 
         private void SpawnBoard()
         {
             int currentLevelSize = GameManager.Instance.CurrentStage + 4;
 
-            var board = Instantiate(_boardPrefab, new Vector3(currentLevelSize / 2f, currentLevelSize / 2f, 0f), Quaternion.identity);
+            var board = Instantiate(_boardPrefab,
+                new Vector3(currentLevelSize / 2f, currentLevelSize / 2f, 0f),
+                Quaternion.identity);
+
             board.size = new Vector2(currentLevelSize + 0.08f, currentLevelSize + 0.08f);
 
             for (int i = 0; i < currentLevelSize; i++)
@@ -62,13 +61,16 @@ namespace Connect.Core
 
             Camera.main.orthographicSize = currentLevelSize + 2f;
             Camera.main.transform.position = new Vector3(currentLevelSize / 2f, currentLevelSize / 2f, -10f);
+
             _clickHighlight.size = new Vector2(currentLevelSize / 4f, currentLevelSize / 4f);
             _clickHighlight.transform.position = Vector3.zero;
             _clickHighlight.gameObject.SetActive(false);
         }
+
         #endregion
 
         #region NODE_SPAWN
+
         private LevelData CurrentLevelData;
         [SerializeField] private Node _nodePrefab;
         private List<Node> _nodes;
@@ -103,11 +105,12 @@ namespace Connect.Core
                     _nodeGrid.Add(new Vector2Int(i, j), spawnedNode);
                     spawnedNode.gameObject.name = i.ToString() + j.ToString();
                     spawnedNode.Pos2D = new Vector2Int(i, j);
+
                 }
             }
 
             List<Vector2Int> offsetPos = new List<Vector2Int>()
-            {Vector2Int.up, Vector2Int.down, Vector2Int.left, Vector2Int.right};
+            {Vector2Int.up,Vector2Int.down,Vector2Int.left,Vector2Int.right };
 
             foreach (var item in _nodeGrid)
             {
@@ -120,6 +123,8 @@ namespace Connect.Core
                     }
                 }
             }
+
+
         }
 
         public List<Color> NodeColors;
@@ -131,31 +136,35 @@ namespace Connect.Core
 
             for (int colorId = 0; colorId < edges.Count; colorId++)
             {
-                if (edges[colorId].StartPoint == point || edges[colorId].EndPoint == point)
+                if (edges[colorId].StartPoint == point ||
+                    edges[colorId].EndPoint == point)
                 {
                     return colorId;
                 }
             }
+
             return -1;
         }
 
-        public Color GetHighlightColor(int colorId)
+        public Color GetHighLightColor(int colorID)
         {
-            Color result = NodeColors[colorId];
+            Color result = NodeColors[colorID % NodeColors.Count];
             result.a = 0.4f;
             return result;
         }
+
 
         #endregion
 
         #endregion
 
         #region UPDATE_METHODS
+
         private Node startNode;
-        void Update()
+
+        private void Update()
         {
-            if (hasGameFinished)
-                return;
+            if (hasGameFinished) return;
 
             if (Input.GetMouseButtonDown(0))
             {
@@ -163,23 +172,22 @@ namespace Connect.Core
                 return;
             }
 
-
             if (Input.GetMouseButton(0))
             {
+
                 Vector3 mousePos = Camera.main.ScreenToWorldPoint(Input.mousePosition);
                 Vector2 mousePos2D = new Vector2(mousePos.x, mousePos.y);
-
                 RaycastHit2D hit = Physics2D.Raycast(mousePos, Vector2.zero);
-
 
                 if (startNode == null)
                 {
-                    if (hit && hit.collider.gameObject.TryGetComponent(out Node tNode))
+                    if (hit && hit.collider.gameObject.TryGetComponent(out Node tNode)
+                        && tNode.IsClickable)
                     {
                         startNode = tNode;
                         _clickHighlight.gameObject.SetActive(true);
                         _clickHighlight.gameObject.transform.position = (Vector3)mousePos2D;
-                        _clickHighlight.color = GetHighlightColor(tNode.colorId);
+                        _clickHighlight.color = GetHighLightColor(tNode.colorId);
                     }
 
                     return;
@@ -187,7 +195,8 @@ namespace Connect.Core
 
                 _clickHighlight.gameObject.transform.position = (Vector3)mousePos2D;
 
-                if (hit && hit.collider.gameObject.TryGetComponent(out Node tempNode) && startNode != tempNode)
+                if (hit && hit.collider.gameObject.TryGetComponent(out Node tempNode)
+                    && startNode != tempNode)
                 {
                     if (startNode.colorId != tempNode.colorId && tempNode.IsEndNode)
                     {
@@ -195,7 +204,6 @@ namespace Connect.Core
                     }
 
                     startNode.UpdateInput(tempNode);
-
                     CheckWin();
                     startNode = null;
                 }
@@ -208,11 +216,13 @@ namespace Connect.Core
                 startNode = null;
                 _clickHighlight.gameObject.SetActive(false);
             }
+
         }
 
         #endregion
 
         #region WIN_CONDITION
+
         private void CheckWin()
         {
             bool IsWinning = true;
@@ -225,20 +235,24 @@ namespace Connect.Core
             foreach (var item in _nodes)
             {
                 IsWinning &= item.IsWin;
-
                 if (!IsWinning)
+                {
                     return;
+                }
             }
 
-            GameManager.Instance.UnlockedLevel();
+            GameManager.Instance.UnlockLevel();
 
             _winText.gameObject.SetActive(true);
             _clickHighlight.gameObject.SetActive(false);
+
+            hasGameFinished = true;
         }
 
         #endregion
 
         #region BUTTON_FUNCTIONS
+
         public void ClickedBack()
         {
             GameManager.Instance.GoToMainMenu();
@@ -249,12 +263,13 @@ namespace Connect.Core
             GameManager.Instance.GoToGameplay();
         }
 
-        public void ClickNextLevel()
+        public void ClickedNextLevel()
         {
             if (!hasGameFinished) return;
 
             GameManager.Instance.GoToGameplay();
         }
+
         #endregion
     }
 }

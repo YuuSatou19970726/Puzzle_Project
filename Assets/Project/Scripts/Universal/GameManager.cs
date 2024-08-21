@@ -1,5 +1,5 @@
-using System.Collections.Generic;
 using Connect.Common;
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace Connect.Core
@@ -7,12 +7,12 @@ namespace Connect.Core
     public class GameManager : MonoBehaviour
     {
         #region START_METHODS
+
         public static GameManager Instance;
 
-        void Awake()
+        private void Awake()
         {
             // PlayerPrefs.DeleteAll();
-
             if (Instance == null)
             {
                 Instance = this;
@@ -32,14 +32,17 @@ namespace Connect.Core
             CurrentLevel = 1;
 
             Levels = new Dictionary<string, LevelData>();
+
             foreach (var item in _allLevels.Levels)
             {
                 Levels[item.LevelName] = item;
             }
         }
+
         #endregion
 
         #region GAME_VARIABLES
+
         [HideInInspector]
         public int CurrentStage;
 
@@ -68,7 +71,7 @@ namespace Connect.Core
             return false;
         }
 
-        public void UnlockedLevel()
+        public void UnlockLevel()
         {
             CurrentLevel++;
 
@@ -87,9 +90,11 @@ namespace Connect.Core
             string levelName = "Level" + CurrentStage.ToString() + CurrentLevel.ToString();
             PlayerPrefs.SetInt(levelName, 1);
         }
+
         #endregion
 
         #region LEVEL_DATA
+
         [SerializeField]
         private LevelData DefaultLevel;
 
@@ -101,6 +106,7 @@ namespace Connect.Core
         public LevelData GetLevel()
         {
             string levelName = "Level" + CurrentStage.ToString() + CurrentLevel.ToString();
+
             if (Levels.ContainsKey(levelName))
             {
                 return Levels[levelName];
@@ -108,9 +114,11 @@ namespace Connect.Core
 
             return DefaultLevel;
         }
+
         #endregion
 
         #region SCENE_LOAD
+
         private const string MainMenu = "MainMenu";
         private const string Gameplay = "Gameplay";
 
@@ -123,6 +131,7 @@ namespace Connect.Core
         {
             UnityEngine.SceneManagement.SceneManager.LoadScene(Gameplay);
         }
+
         #endregion
     }
 }

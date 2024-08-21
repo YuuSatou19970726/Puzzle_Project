@@ -139,119 +139,119 @@ namespace Connect.Generator.AllNeighbours
             }
         }
     }
-}
 
-public class GridData
-{
-    private static List<Point> directionChecks = new List<Point>()
+    public class GridData
+    {
+        private static List<Point> directionChecks = new List<Point>()
         {Point.up, Point.down, Point.left, Point.right};
 
-    public Dictionary<Point, int> _grid;
-    public bool IsSolved;
-    public Point CurrentPos;
-    public int ColorId;
+        public Dictionary<Point, int> _grid;
+        public bool IsSolved;
+        public Point CurrentPos;
+        public int ColorId;
 
-    public GridData(int i, int j, int levelSize)
-    {
-        _grid = new Dictionary<Point, int>();
-
-        for (int a = 0; a < levelSize; a++)
+        public GridData(int i, int j, int levelSize)
         {
-            for (int b = 0; b < levelSize; b++)
+            _grid = new Dictionary<Point, int>();
+
+            for (int a = 0; a < levelSize; a++)
             {
-                _grid[new Point(a, b)] = -1;
+                for (int b = 0; b < levelSize; b++)
+                {
+                    _grid[new Point(a, b)] = -1;
+                }
             }
+
+            IsSolved = false;
+            CurrentPos = new Point(i, j);
+            ColorId = 0;
+            _grid[CurrentPos] = ColorId;
         }
 
-        IsSolved = false;
-        CurrentPos = new Point(i, j);
-        ColorId = 0;
-        _grid[CurrentPos] = ColorId;
-    }
-
-    public GridData(int i, int j, int passedColor, GridData gridCopy)
-    {
-        _grid = new Dictionary<Point, int>();
-
-        foreach (var item in gridCopy._grid)
+        public GridData(int i, int j, int passedColor, GridData gridCopy)
         {
-            _grid[item.Key] = item.Value;
+            _grid = new Dictionary<Point, int>();
+
+            foreach (var item in gridCopy._grid)
+            {
+                _grid[item.Key] = item.Value;
+            }
+
+            CurrentPos = new Point(i, j);
+            ColorId = passedColor;
+            _grid[CurrentPos] = ColorId;
+            IsSolved = false;
         }
 
-        CurrentPos = new Point(i, j);
-        ColorId = passedColor;
-        _grid[CurrentPos] = ColorId;
-        IsSolved = false;
-    }
-
-    public bool IsInsideGrid(Point pos)
-    {
-        return _grid.ContainsKey(pos);
-    }
-
-    public bool IsGridComplete()
-    {
-        foreach (var item in _grid)
+        public bool IsInsideGrid(Point pos)
         {
-            if (item.Value == -1) return false;
+            return _grid.ContainsKey(pos);
         }
 
-        for (int i = 0; i <= ColorId; i++)
+        public bool IsGridComplete()
         {
-            int result = 0;
+            foreach (var item in _grid)
+            {
+                if (item.Value == -1) return false;
+            }
+
+            for (int i = 0; i <= ColorId; i++)
+            {
+                int result = 0;
+
+                foreach (var item in _grid)
+                {
+                    if (item.Value == i)
+                        result++;
+                }
+
+
+                if (result < 3)
+                    return false;
+            }
+
+            return true;
+        }
+
+        public bool IsNotNeighbour(Point pos)
+        {
+            foreach (var item in _grid)
+            {
+                if (item.Value == ColorId && item.Key != CurrentPos)
+                {
+                    foreach (var direction in directionChecks)
+                    {
+                        if (pos - item.Key == direction) return false;
+                    }
+                }
+            }
+
+            return true;
+        }
+
+        public List<Point> EmptyPosition()
+        {
+            List<Point> result = new List<Point>();
 
             foreach (var item in _grid)
             {
-                if (item.Value == i)
+                if (item.Value == -1)
+                    result.Add(item.Key);
+            }
+
+            return result;
+        }
+
+        public int FlowLength()
+        {
+            int result = 0;
+            foreach (var item in _grid)
+            {
+                if (item.Value == ColorId)
                     result++;
             }
 
-
-            if (result < 3)
-                return false;
+            return result;
         }
-
-        return true;
-    }
-
-    public bool IsNotNeighbour(Point pos)
-    {
-        foreach (var item in _grid)
-        {
-            if (item.Value == ColorId && item.Key != CurrentPos)
-            {
-                foreach (var direction in directionChecks)
-                {
-                    if (pos - item.Key == direction) return false;
-                }
-            }
-        }
-
-        return true;
-    }
-
-    public List<Point> EmptyPosition()
-    {
-        List<Point> result = new List<Point>();
-
-        foreach (var item in _grid)
-        {
-            if (item.Value == -1)
-                result.Add(item.Key);
-        }
-
-        return result;
-    }
-
-    public int FlowLength()
-    {
-        int result = 0;
-        foreach (var item in _grid)
-        {
-            if (item.Value == ColorId)
-                result++;
-        }
-
-        return result;
     }
 }

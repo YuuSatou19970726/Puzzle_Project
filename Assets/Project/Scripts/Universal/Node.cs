@@ -313,7 +313,7 @@ namespace Connect.Core
             if (checkingNodes.Count == 2)
             {
                 _highlight.SetActive(true);
-                _highlight.GetComponent<SpriteRenderer>().color = GameplayManager.Instance.GetHighlightColor(colorId);
+                _highlight.GetComponent<SpriteRenderer>().color = GameplayManager.Instance.GetHighLightColor(colorId);
             }
             else
             {

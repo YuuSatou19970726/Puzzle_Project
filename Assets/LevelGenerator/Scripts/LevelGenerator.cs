@@ -133,6 +133,8 @@ namespace Connect.Generator
         #region GENERATE_ALL_LEVEL
 
         [SerializeField] private TMP_Text _counterText;
+        public GridData result;
+
         private void GenerateAll()
         {
             StartCoroutine(GenerateAllLevels());
@@ -140,11 +142,11 @@ namespace Connect.Generator
 
         private IEnumerator GenerateAllLevels()
         {
-            for (int i = 0; i < 51; i++)
+            for (int i = 1; i < 51; i++)
             {
                 yield return GenerateSingleLevelData(i);
                 _counterText.text = i.ToString();
-                yield return new WaitForSeconds(0.2f);
+                yield return null;
             }
         }
 
@@ -166,8 +168,9 @@ namespace Connect.Generator
             currentLevelData.LevelName = currentLevelName;
             currentLevelData.Edges = new List<Edge>();
 
-            yield return null;
-            GetComponent<GenerateMethod>().Generate();
+            yield return GetComponent<LevelGeneratorSingle>().Generate();
+            currentLevelData.Edges = result.Edges;
+            RenderGrid(result._grid);
         }
         #endregion
 
