@@ -3,6 +3,7 @@ using Connect.Common;
 using System.Collections;
 using UnityEditor;
 using UnityEngine;
+using TMPro;
 
 namespace Connect.Generator
 {
@@ -88,7 +89,7 @@ namespace Connect.Generator
             }
             else
             {
-
+                GenerateAll();
             }
 
             _simulateButton.SetActive(false);
@@ -98,12 +99,14 @@ namespace Connect.Generator
         private LevelList _allLevelList;
         private Dictionary<string, LevelData> Levels;
 
+        #region GENARATE_SINGLE_LEVEL
+
         private void GenerateDefault()
         {
             GenerateLevelData();
         }
 
-        private LevelData currentLevelData;
+        public LevelData currentLevelData;
 
         private void GenerateLevelData(int level = 0)
         {
@@ -125,6 +128,48 @@ namespace Connect.Generator
 
             GetComponent<GenerateMethod>().Generate();
         }
+        #endregion
+
+        #region GENERATE_ALL_LEVEL
+
+        [SerializeField] private TMP_Text _counterText;
+        private void GenerateAll()
+        {
+            StartCoroutine(GenerateAllLevels());
+        }
+
+        private IEnumerator GenerateAllLevels()
+        {
+            for (int i = 0; i < 51; i++)
+            {
+                yield return GenerateSingleLevelData(i);
+                _counterText.text = i.ToString();
+                yield return new WaitForSeconds(0.2f);
+            }
+        }
+
+        private IEnumerator GenerateSingleLevelData(int level = 0)
+        {
+            string currentLevelName = "Level" + stage.ToString() + level.ToString();
+            if (!Levels.ContainsKey(currentLevelName))
+            {
+#if UNITY_EDITOR
+                currentLevelData = ScriptableObject.CreateInstance<LevelData>();
+                AssetDatabase.CreateAsset(currentLevelData, "Assets/Common/Prefabs/Levels/" + currentLevelName + ".asset");
+                AssetDatabase.SaveAssets();
+#endif
+                Levels[currentLevelName] = currentLevelData;
+                _allLevelList.Levels.Add(currentLevelData);
+            }
+
+            currentLevelData = Levels[currentLevelName];
+            currentLevelData.LevelName = currentLevelName;
+            currentLevelData.Edges = new List<Edge>();
+
+            yield return null;
+            GetComponent<GenerateMethod>().Generate();
+        }
+        #endregion
 
         #endregion
 

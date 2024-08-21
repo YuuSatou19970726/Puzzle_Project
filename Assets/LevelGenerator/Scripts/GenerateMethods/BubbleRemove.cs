@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using Connect.Common;
 using TMPro;
 using UnityEngine;
 
@@ -89,6 +90,7 @@ namespace Connect.Generator.BubbleRemove
             {
                 if (CurrentNode.Data.IsGridComplete())
                 {
+                    Instance.currentLevelData.Edges = CurrentNode.Data.Edges;
                     yield break;
                 }
                 nextNode = CurrentNode.Next();
@@ -275,6 +277,7 @@ namespace Connect.Generator.BubbleRemove
         public Point CurrentPos;
         public int ColorId;
         public static int LevelSize;
+        public List<Edge> Edges;
 
         public GridData(int levelSize)
         {
@@ -291,24 +294,7 @@ namespace Connect.Generator.BubbleRemove
             IsSolved = false;
             ColorId = -1;
             LevelSize = levelSize;
-        }
-
-        public GridData(int i, int j, int levelSize)
-        {
-            _grid = new int[levelSize, levelSize];
-
-            for (int a = 0; a < levelSize; a++)
-            {
-                for (int b = 0; b < levelSize; b++)
-                {
-                    _grid[a, b] = -1;
-                }
-            }
-            IsSolved = false;
-            CurrentPos = new Point(i, j);
-            ColorId = 0;
-            _grid[CurrentPos.x, CurrentPos.y] = ColorId;
-            LevelSize = levelSize;
+            Edges = new List<Edge>();
         }
 
         public GridData(int i, int j, int passedColor, GridData gridCopy)
@@ -321,6 +307,32 @@ namespace Connect.Generator.BubbleRemove
                 {
                     _grid[a, b] = gridCopy._grid[a, b];
                 }
+            }
+
+            Edges = new List<Edge>();
+
+            foreach (var item in gridCopy.Edges)
+            {
+                Edge temp = new Edge();
+                temp.Points = new List<Vector2Int>();
+                foreach (var point in item.Points)
+                {
+                    temp.Points.Add(point);
+                }
+                Edges.Add(temp);
+            }
+
+            ColorId = gridCopy.ColorId;
+            if (passedColor == ColorId)
+            {
+                Edges[Edges.Count - 1].Points.Add(new Vector2Int(i, j));
+            }
+            else
+            {
+                Edges.Add(new Edge()
+                {
+                    Points = new List<Vector2Int>() { new Vector2Int(i, j) }
+                });
             }
 
             CurrentPos = new Point(i, j);
@@ -349,6 +361,7 @@ namespace Connect.Generator.BubbleRemove
             IsSolved = false;
             ColorId = -1;
             LevelSize = levelSize;
+            Edges = new List<Edge>();
         }
 
         public bool IsInsideGrid(Point pos)
